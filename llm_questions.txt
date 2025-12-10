@@ -1,0 +1,113 @@
+I can't directly create a Google Doc for you, but I can provide the text below, formatted and ready for you to copy and paste into a new document. You can easily create a new Google Doc and title it "LLM Sparse Model Learning Notes" or something similar.
+
+-----
+
+# LLM Sparse Models (Mixture-of-Experts) Explained
+
+Here is an expanded, more detailed summary with clear examples, covering everything from “what is a sparse model” to “difference between parameters vs tokens.” This version adds technical depth, easy analogies, and model-specific examples like Mixtral, GPT-3, and Llama.
+
+## ⭐ 1. What is a sparse model? (with examples)
+
+A sparse model is an LLM where **only part of the network is used** for each token, instead of all parameters being activated every time.
+
+  * **Dense model example (everything is used): Llama-2 70B**
+      * All 70B parameters run for every token → very expensive.
+  * **Sparse model example: Mixtral 8×7B (\~45B total params)**
+      * Has 8 experts per MoE layer
+      * Only top-2 experts run per token
+      * Effective compute \~12B parameters per token
+
+*Takeaway: Mixtral has nearly the memory capacity of a huge 45B model, but the runtime cost of a 12B model.*
+
+## ⭐ 2. Why sparse (MoE) models exist
+
+Sparse models solve a key problem: We want very large model capacity without paying proportional compute costs.
+
+MoE (Mixture-of-Experts) models achieve this:
+
+  * **Parameters:** many (experts)
+  * **Compute:** few (only 1–2 activated per token)
+
+This lets them scale differently:
+
+  * More total knowledge
+  * Lower inference cost
+
+## ⭐ 3. Do sparse models perform worse on specific questions?
+
+Not necessarily.
+
+  * **✔ They often perform better because:**
+      * **Experts specialize:** e.g., Expert 1 → math, Expert 2 → Python code, Expert 3 → multilingual text, etc.
+  * **❗ But they can show more variability:**
+      * Router may pick different experts on different queries
+      * Answers may vary more than dense models
+
+*Comparison: Dense models → consistent, stable. Sparse models → efficient, specialized, slightly more variable.*
+
+## ⭐ 4. How sparsity works in LLM serving (routing, experts)
+
+Let’s use Mixtral 8×7B as the concrete example.
+
+1.  **🔹 Step 1: Token hidden state enters MoE layer**
+      * Each token’s vector (e.g., 4096-D) goes into the router network.
+2.  **🔹 Step 2: Router scores all experts**
+      * Router produces 8 scores.
+3.  **🔹 Step 3: Pick top-2 experts**
+      * The highest-scored experts run (e.g., E2 and E8).
+4.  **🔹 Step 4: Only 2 experts perform compute**
+      * Each expert is like a separate feed-forward network and produces an output.
+5.  **🔹 Step 5: Router combines them**
+      * Weighted sum: `output = w2 * output(E2) + w8 * output(E8)`
+6.  **🔹 Step 6: Move to next transformer layer**
+      * Repeat routing at every MoE layer.
+
+*Example: The token “def foo():” likely activates experts specialized in Code and Functions.*
+
+## ⭐ 5. How many experts does a sparse model have?
+
+Mixtral 8×7B:
+
+  * 8 experts per MoE layer
+  * Only 2 active per token
+  * Model may have \~16 MoE layers → around 128 total experts
+  * Each expert ≈ size of a 7B FFN block
+
+*Result: Huge capacity, but only a small fraction used at any moment.*
+
+## ⭐ 6. Training FLOPs vs model parameters
+
+**GPT-3 175B trained using 3.14 × 10²³ FLOPs — what does this mean?**
+
+  * Training required 314 sextillion floating-point operations.
+  * This represents total **compute effort**.
+  * FLOPs tell you nothing about parameter count; it's about **training cost**.
+
+**How FLOPs are estimated:**
+
+  * For transformers: Training FLOPs ≈ 6 × parameters × training\_tokens
+  * Example for GPT-3: `6 × 175B × 300B ≈ 3.15 × 10²³ FLOPs`
+
+## ⭐ 7. Difference between parameters vs tokens (with clear examples)
+
+| Feature        | Parameters                                      | Tokens                                               |
+| :------------- | :---------------------------------------------- | :--------------------------------------------------- |
+| **What it is** | Model’s memory/capacity (What the model stores) | Training data (What the model reads during training) |
+| **Examples**   | GPT-3 → 175B, Mixtral → 45B                     | Llama-3: \~15T tokens, Mixtral: \~5T tokens          |
+| **Analogy**    | **Brain size** (capacity)                       | **Books read** (experience)                          |
+
+  * **They are NOT the same, NOT related numerically.**
+  * **Why use more tokens than parameters?** According to the Chinchilla scaling law, optimal training tokens ≈ 20 × model parameters. However, modern models like Llama-3 train on even more for improved performance.
+
+-----
+
+## ⭐ Ultra Short TL;DR
+
+  * **✔ Sparse model** = only part of the model runs per token
+  * **✔ MoE** = router picks top-experts for each token
+  * **✔ Mixtral** = 8 experts per layer, 2 active per token
+  * **✔ More capacity, same compute**
+  * **✔ FLOPs** = training effort, not model size
+  * **✔ Parameters** = brain capacity
+  * **✔ Tokens** = books read
+
