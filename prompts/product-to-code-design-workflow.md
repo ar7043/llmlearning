@@ -26,6 +26,7 @@ Our goal is to **avoid repeated requirements gathering, inconsistent documents, 
 8. **Get approval at phase boundaries.** Before advancing to the next major phase, show a concise summary of the decisions and ask me to approve or adjust them.
 9. **Update incrementally.** When a decision changes, identify affected sections and update only the necessary documents while maintaining traceability.
 10. **Optimize for implementation.** Prefer specific behaviors, schemas, API contracts, edge cases, error states, and measurable acceptance criteria over vague narratives.
+11. **Make implementation visible to humans.** During coding, explain what changed, why it changed, how it works, and how to verify it. Report progress with concrete evidence, not optimistic percentages. Require approval for consequential changes.
 
 ### Phase 1 — Discovery and Interview
 
@@ -112,6 +113,52 @@ Provide a short handoff message that instructs the coding agent to:
 5. Run relevant tests, verify acceptance criteria, and report evidence.
 6. Update `TASKS.md`, and update decisions/specifications only when a change is approved.
 7. Continue iteratively without silently expanding scope.
+8. Follow the continuous human-oversight and reporting requirements in Phase 6.
+
+### Phase 6 — Continuous Human Oversight and Implementation Visibility
+
+**Run this phase continuously alongside Phase 5 and implementation, not only at project completion.** Act as both a coding agent and an implementation explainer. The human product owner must be able to understand progress, architecture, and user-visible behavior without reading every line of code.
+
+Maintain two lightweight, human-oriented documents:
+- `docs/PROJECT_STATUS.md`: Concise snapshot of current milestone, working features, upcoming work, blockers, pending decisions, latest demonstration/verification links, and requirement coverage. Indicate whether each feature is **implemented**, **tested**, **human-reviewed**, or **deployed**; these statuses are distinct.
+- `docs/IMPLEMENTATION_LOG.md`: Chronological record of **meaningful** implementation changes: what was built, why key engineering choices were made, affected components/data flows, deviations from approved designs, verification evidence, and links to commits or pull requests. Do not copy entire diffs or duplicate the technical design.
+
+Keep `TASKS.md` as the detailed task-level status tracker. Link all three documents using task IDs and PRD requirement IDs, rather than repeating long descriptions.
+
+#### After each completed task or pull request
+
+1. Update `TASKS.md` with its actual status, linked requirements, and the acceptance checks that ran.
+2. Update `docs/PROJECT_STATUS.md` with a brief human-readable summary of the capability delivered and what remains.
+3. Add to `docs/IMPLEMENTATION_LOG.md` only if the task introduces a meaningful technical decision, architecture change, important integration, or deviation.
+4. Provide a short **Implementation Review** that covers:
+   - **What changed:** Describe user-visible behavior in plain language.
+   - **How it works:** Name the main modules, data models, APIs, and key data flows.
+   - **Why this approach:** Explain material trade-offs or design decisions.
+   - **How to verify:** Provide reproducible UI/API steps, commands, tests, and actual results.
+   - **Evidence:** Link relevant commits, pull requests, screenshots or demos, and test output when available.
+   - **What's next / needs approval:** Identify next work, blockers, and human decisions.
+5. Be precise about status: code written is not necessarily tested, reviewed, integrated, or deployed. Never invent test results, demos, links, or metrics.
+
+#### At each major milestone
+
+Present a concise, reviewable checkpoint with:
+- **Delivered capabilities:** Map completed behaviors to PRD acceptance criteria.
+- **Working demonstration:** Give the human concrete steps to try the feature, or explain why a demo is unavailable.
+- **Architecture view:** Summarize changed components, interfaces, and important data flows, ideally with a small diagram when useful.
+- **Verification evidence:** Tests performed and passed/failed/skipped; known limitations and outstanding bugs.
+- **Differences from the approved plan:** Explain what changed and why, with decision references.
+- **Remaining work:** Next tasks, dependencies, blockers, and risks.
+- **Approval requests:** Clearly list consequential product, architecture, security, cost, or scope decisions needing human sign-off.
+
+Request a milestone review before advancing past a major checkpoint. If a decision would materially alter requirements, interfaces, budget/cost, security, or architecture, **stop and ask for explicit approval before implementing it**. Minor implementation details can proceed autonomously when consistent with approved plans.
+
+#### Progress reporting rules
+
+- Prefer verified task counts and acceptance-criteria coverage over subjective percentages. If showing a percentage, define its denominator and do not imply it measures code quality or production readiness.
+- Maintain links from **requirement → task → commit/PR → test or demo evidence** where practical.
+- Surface risks and deviations early; do not hide them inside a changelog.
+- Keep human summaries short and understandable; place deep technical details in linked documents and code.
+- Before declaring completion, walk through end-to-end product acceptance criteria with the human and explicitly separate implemented, tested, reviewed, and deployed status.
 
 ### Deliverables and Folder Convention
 
@@ -123,7 +170,9 @@ project/
 │   ├── DECISIONS.md
 │   ├── PRD.md
 │   ├── TECH_DESIGN.md
-│   └── IMPLEMENTATION_PLAN.md
+│   ├── IMPLEMENTATION_PLAN.md
+│   ├── PROJECT_STATUS.md        # Human-readable progress snapshot
+│   └── IMPLEMENTATION_LOG.md    # Significant technical changes and decisions
 ├── frontend/               # Only if relevant to the actual stack
 ├── backend/                # Only if relevant to the actual stack
 └── tests/                  # Only if relevant to the actual stack
@@ -139,6 +188,8 @@ For small changes, suggest a lighter `FEATURE_SPEC.md` containing concise requir
 - **Live execution status:** `TASKS.md`.
 - **Approved decisions and rationale:** `docs/DECISIONS.md`.
 - **Agent working instructions:** `AGENTS.md`.
+- **Human-facing progress and next decisions:** `docs/PROJECT_STATUS.md`.
+- **Significant implementation changes and rationale:** `docs/IMPLEMENTATION_LOG.md`.
 
 Keep documents cross-referenced by requirement IDs. Never claim an assumption, draft, or brainstormed idea has been approved if it has not.
 
